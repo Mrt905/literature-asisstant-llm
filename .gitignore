@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
-papers_pdf
 .env
 
+# Documents
+papers_pdf
