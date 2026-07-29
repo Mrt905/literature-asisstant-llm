@@ -49,7 +49,7 @@ class RAGBase:
 
         rows = self.conn.execute(
             """
-            SELECT text, filename, author, journal, year,
+            SELECT id, text, filename, author, journal, year,
                    1 - (embedding <=> %s::vector) AS similarity
             FROM chunks
             ORDER BY embedding <=> %s::vector
@@ -60,12 +60,13 @@ class RAGBase:
 
         return [
             {
-                "text": r[0],
-                "filename": r[1],
-                "author": r[2],
-                "journal": r[3],
-                "year": r[4],
-                "similarity": r[5]
+                "id": r[0],
+                "text": r[1],
+                "filename": r[2],
+                "author": r[3],
+                "journal": r[4],
+                "year": r[5],
+                "similarity": r[6]
             }
             for r in rows
         ]
