@@ -1,5 +1,5 @@
 import fitz  # pymupdf
-import 
+import os
 import psycopg
 from sentence_transformers import SentenceTransformer
 from tqdm.auto import tqdm
@@ -74,12 +74,12 @@ def chunk_documents(documents, chunk_size=1000, overlap=200):
 def vec_to_str(vector):
     return "[" + ",".join(str(x) for x in vector) + "]"
 
-def setup_database(conn):
+def setup_database(conn, table_name="chunks", embedding_dim=384):
     """Create the chunks table if it doesn't exist"""
     conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-    conn.execute("DROP TABLE IF EXISTS chunks")
-    conn.execute("""
-        CREATE TABLE chunks (
+    conn.execute(f"DROP TABLE IF EXISTS {table_name}")
+    conn.execute(f"""
+        CREATE TABLE {table_name} (
             id SERIAL PRIMARY KEY,
             text TEXT,
             chunk_id INTEGER,
@@ -88,22 +88,22 @@ def setup_database(conn):
             journal TEXT,
             year TEXT,
             keywords TEXT,
-            embedding vector(384)
+            embedding vector({embedding_dim})
         )
     """)
     conn.commit()
 
 
 
-def insert_chunks(conn, chunks, model):
+def insert_chunks(conn, chunks, model, table_name="chunks"):
     """Embed and insert chunks into Postgres"""
     for chunk in tqdm(chunks):
         vector = model.encode(chunk["text"])
         vector_str = vec_to_str(vector)
         
         conn.execute(
-            """
-            INSERT INTO chunks (text, chunk_id, filename, author, journal, year, keywords, embedding)
+            f"""
+            INSERT INTO {table_name} (text, chunk_id, filename, author, journal, year, keywords, embedding)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s::vector)
             """,
             (chunk["text"], chunk["chunk_id"], chunk["filename"],

@@ -108,3 +108,39 @@ class RAGBase:
             answer = response.output_text,
             usage = response.usage
         )
+
+
+# RAGBaseEval - Ragbase used for evaluation experiment, table_name added
+class RAGBaseEval(RAGBase):
+
+    def __init__(self, table_name="chunks", **kwargs):
+        super().__init__(**kwargs)
+        self.table_name = table_name
+
+    def search(self, query, num_results=5):
+        query_vector = self.model.encode(query)
+        query_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+
+        rows = self.conn.execute(
+            f"""
+            SELECT id, text, filename, author, journal, year,
+                   1 - (embedding <=> %s::vector) AS similarity
+            FROM {self.table_name}
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+            """,
+            (query_str, query_str, num_results)
+        ).fetchall()
+
+        return [
+            {
+                "id": r[0],
+                "text": r[1],
+                "filename": r[2],
+                "author": r[3],
+                "journal": r[4],
+                "year": r[5],
+                "similarity": r[6]
+            }
+            for r in rows
+        ]
