@@ -42,7 +42,7 @@ class RAGBase:
         self.prompt_template = prompt_template
         self.llm_model = llm_model
 
-    def search(self, query, num_results=5):
+    def search(self, query, num_results=10):
 
         query_vector = self.model.encode(query)
         query_str = "[" + ",".join(str(x) for x in query_vector) + "]"
