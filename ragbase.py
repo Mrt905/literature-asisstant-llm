@@ -144,3 +144,47 @@ class RAGBaseEval(RAGBase):
             }
             for r in rows
         ]
+
+#RAGBaseHistory - ragbase that stores history of the conversation
+class RAGBaseHistory(RAGBase):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.history = []
+
+    def rag(self, query):
+        search_results = self.search(query)
+        prompt = self.build_prompt(query, search_results)
+        response = self.llm_with_history(prompt)
+        
+        # store in history
+        self.history.append({
+            "question": query,
+            "answer": response.output_text
+        })
+        
+        return RAGResponse(
+            answer=response.output_text,
+            usage=response.usage
+        )
+
+    def llm_with_history(self, prompt):
+        input_messages = [
+            {"role": "developer", "content": self.instructions}
+        ]
+        
+        # add conversation history
+        for h in self.history:
+            input_messages.append({"role": "user", "content": h["question"]})
+            input_messages.append({"role": "assistant", "content": h["answer"]})
+        
+        # add current question
+        input_messages.append({"role": "user", "content": prompt})
+
+        return self.llm_client.responses.create(
+            model=self.llm_model,
+            input=input_messages
+        )
+
+    def clear_history(self):
+        self.history = []
