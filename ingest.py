@@ -1,7 +1,5 @@
 import fitz  # pymupdf
 import os
-import psycopg
-from sentence_transformers import SentenceTransformer
 from tqdm.auto import tqdm
 
 # loading pdf papers
@@ -74,7 +72,7 @@ def chunk_documents(documents, chunk_size=1000, overlap=200):
 def vec_to_str(vector):
     return "[" + ",".join(str(x) for x in vector) + "]"
 
-def setup_database(conn, table_name="chunks", embedding_dim=384):
+def setup_database(conn, table_name="chunks", embedding_dim=768):
     """Create the chunks table if it doesn't exist"""
     conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
     conn.execute(f"DROP TABLE IF EXISTS {table_name}")

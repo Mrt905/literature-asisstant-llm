@@ -1,3 +1,4 @@
+from tqdm.auto import tqdm
 
 def hit_rate(relevance_total):
     cnt = 0

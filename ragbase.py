@@ -12,7 +12,7 @@ Use the context to find relevant information and provide accurate
 answers. Using two different sources for the same answer is good, you can try to reason
 but make sure that you provide accurate info and source of the information. 
 If the answer is not found in the context, respond with "I don't know." 
-If the exact asnwer is not found in the context, but a useful information is, respond with 
+If the exact answer is not found in the context, but a useful information is, respond with 
 "I don't know exactly, but I have some related information that might help" and provide the information.
 """
 
