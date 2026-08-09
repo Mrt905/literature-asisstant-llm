@@ -1,0 +1,136 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}},
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "title": "Total Questions",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT COUNT(*) as value FROM conversations;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}},
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "title": "Average Response Time (s)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT ROUND(AVG(response_time)::numeric, 2) as value FROM conversations;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}},
+        "overrides": []
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "title": "Average Total Tokens",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT ROUND(AVG(total_tokens)) as value FROM conversations;",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "custom": {"lineWidth": 2}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 4,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "title": "Questions over time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT timestamp as time, COUNT(*) as questions FROM conversations GROUP BY timestamp ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 5,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+      "title": "Response time over time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT timestamp as time, response_time FROM conversations ORDER BY timestamp;",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "datasource": "PostgreSQL",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 12},
+      "id": 6,
+      "options": {"footer": {"fields": "", "reducer": ["sum"], "show": false}, "showHeader": true},
+      "title": "Recent conversations",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": "PostgreSQL",
+          "rawSql": "SELECT timestamp, question, LEFT(answer, 100) || '...' as answer, ROUND(response_time::numeric, 2) as response_time, total_tokens FROM conversations ORDER BY timestamp DESC LIMIT 10;",
+          "format": "table"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": [],
+  "templating": {"list": []},
+  "time": {"from": "now-24h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Literature Assistant Monitoring",
+  "uid": "literature-assistant",
+  "version": 1
+}

@@ -11,4 +11,4 @@ wheels/
 .env
 
 # folder with papers
-papers_pdf/*.pdf
+# papers_pdf/*.pdf

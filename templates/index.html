@@ -17,6 +17,62 @@
             border-bottom: 2px solid #2c3e50;
             padding-bottom: 10px;
         }
+        #chat-box {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .user-message {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            max-width: 80%;
+            margin-left: auto;
+        }
+        .assistant-message {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            max-width: 80%;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .usage-info {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        .feedback-box {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .feedback-box button {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 3px;
+        }
+        .feedback-box button:hover {
+            background-color: #f0f0f0;
+        }
+        .feedback-thanks {
+            font-size: 13px;
+            color: #27ae60;
+            margin-top: 8px;
+        }
         textarea {
             width: 100%;
             padding: 10px;
@@ -26,61 +82,55 @@
             resize: vertical;
             box-sizing: border-box;
         }
-        button {
+        .buttons {
+            display: flex;
+            gap: 10px;
             margin-top: 10px;
+        }
+        button {
             padding: 10px 25px;
             font-size: 16px;
-            background-color: #2c3e50;
-            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        button:hover {
+        #ask-btn {
+            background-color: #2c3e50;
+            color: white;
+        }
+        #ask-btn:hover {
             background-color: #34495e;
         }
-        #answer-box {
-            margin-top: 20px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            display: none;
+        #clear-btn {
+            background-color: #e74c3c;
+            color: white;
         }
-        #answer-text {
-            font-size: 16px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        #usage-box {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #888;
+        #clear-btn:hover {
+            background-color: #c0392b;
         }
         #loading {
             display: none;
-            margin-top: 15px;
             color: #888;
             font-style: italic;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>🔬 Tumor Microbiome Literature Assistant</h1>
-    <p>Ask a question about tumor microbiome based on the provided scientific papers.</p>
+    <h1>Tumor Microbiome Literature Assistant</h1>
+    <p>Ask questions about tumor microbiome based on provided scientific papers.</p>
 
-    <textarea id="question" rows="4" 
+    <div id="chat-box"></div>
+
+    <textarea id="question" rows="3" 
               placeholder="e.g. What bacteria are associated with lung cancer?"></textarea>
-    <br>
-    <button onclick="askQuestion()">Ask</button>
+    
+    <div class="buttons">
+        <button id="ask-btn" onclick="askQuestion()">Ask</button>
+        <button id="clear-btn" onclick="clearHistory()">Clear conversation</button>
+    </div>
 
     <div id="loading">Searching papers and generating answer...</div>
-
-    <div id="answer-box">
-        <h3>Answer:</h3>
-        <div id="answer-text"></div>
-        <div id="usage-box"></div>
-    </div>
 
     <script>
         async function askQuestion() {
@@ -91,9 +141,9 @@
                 return;
             }
 
-            // show loading, hide answer
+            addMessage(question, "user");
+            document.getElementById("question").value = "";
             document.getElementById("loading").style.display = "block";
-            document.getElementById("answer-box").style.display = "none";
 
             try {
                 const response = await fetch("/ask", {
@@ -103,23 +153,63 @@
                 });
 
                 const data = await response.json();
-
-                // show answer
-                document.getElementById("answer-text").innerText = data.answer;
-                document.getElementById("usage-box").innerText = 
-                    `Tokens used — Input: ${data.usage.input_tokens}, Output: ${data.usage.output_tokens}, Total: ${data.usage.total_tokens}`;
-                
-                document.getElementById("answer-box").style.display = "block";
+                addMessage(data.answer, "assistant", data.usage, data.response_time, data.id);
 
             } catch (error) {
-                document.getElementById("answer-text").innerText = "Error: " + error.message;
-                document.getElementById("answer-box").style.display = "block";
+                addMessage("Error: " + error.message, "assistant");
             } finally {
                 document.getElementById("loading").style.display = "none";
             }
         }
 
-        // allow pressing Enter to submit
+        function addMessage(text, role, usage=null, response_time=null, conversation_id=null) {
+            const chatBox = document.getElementById("chat-box");
+            
+            const div = document.createElement("div");
+            div.className = role === "user" ? "user-message" : "assistant-message";
+            div.innerText = text;
+            
+            if (usage) {
+                const usageDiv = document.createElement("div");
+                usageDiv.className = "usage-info";
+                usageDiv.innerText = `Tokens — Input: ${usage.input_tokens}, Output: ${usage.output_tokens}, Total: ${usage.total_tokens} | Response time: ${response_time}s`;
+                div.appendChild(usageDiv);
+            }
+
+            // add feedback buttons for assistant messages
+            if (role === "assistant" && conversation_id) {
+                const feedbackDiv = document.createElement("div");
+                feedbackDiv.className = "feedback-box";
+                feedbackDiv.id = `feedback-${conversation_id}`;
+                feedbackDiv.innerHTML = `
+                    Was this answer helpful?
+                    <button onclick="submitFeedback(${conversation_id}, 1)">👍</button>
+                    <button onclick="submitFeedback(${conversation_id}, -1)">👎</button>
+                `;
+                div.appendChild(feedbackDiv);
+            }
+            
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function submitFeedback(id, feedback) {
+            await fetch("/feedback", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({id: id, feedback: feedback})
+            });
+            
+            const feedbackDiv = document.getElementById(`feedback-${id}`);
+            feedbackDiv.className = "feedback-thanks";
+            feedbackDiv.innerHTML = feedback === 1 ? "👍 Thank you for your feedback!" : "👎 Thank you for your feedback!";
+        }
+
+        async function clearHistory() {
+            await fetch("/clear", {method: "POST"});
+            document.getElementById("chat-box").innerHTML = "";
+        }
+
         document.getElementById("question").addEventListener("keydown", function(e) {
             if (e.key === "Enter" && e.ctrlKey) {
                 askQuestion();
