@@ -10,6 +10,5 @@ wheels/
 .venv
 .env
 
-# Documents
-papers_pdf
-data
+# folder with papers
+papers_pdf/*.pdf
