@@ -10,27 +10,6 @@ A RAG (Retrieval-Augmented Generation) assistant that answers questions based on
 4. The LLM generates an answer grounded in the provided literature
 5. Every conversation is logged to a monitoring database and visualized in Grafana
 
-## Project structure
-
-literature-assistant-llm/
-├── app.py ← Flask web application
-├── ragbase.py ← RAG pipeline classes
-├── ingest.py ← PDF loading, chunking, embedding functions
-├── evaluation.py ← Retrieval evaluation metrics
-├── templates/
-│ └── index.html ← Web interface
-├── grafana/ ← Grafana provisioning
-├── papers_pdf/ ← Put your PDF papers here!!!
-├── data/ ← Ground truth and evaluation results
-├── docker-compose.yml ← Docker services configuration
-├── Dockerfile ← Flask app container
-├── init.sql ← Database initialization
-├── 01_ingest.ipynb ← Ingestion pipeline
-├── 02_rag.ipynb ← RAG pipeline notebook
-├── 03_evaluation-ret.ipynb ← Ground truth generation
-├── 04_evaluation-ret-exp.ipynb ← Embedding model experiments
-└── 05_evaluation-rag.ipynb ← RAG answer quality evaluation
-
 ## Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Git](https://git-scm.com/)
