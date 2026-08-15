@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+.env
+papers_pdf/
+data/
+*.ipynb
+notebooks/
+.git
+*.db
+models/

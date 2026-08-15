@@ -8,7 +8,7 @@ A RAG (Retrieval-Augmented Generation) system designed for **scientific literatu
 > 3. Use the assistant for fast retrieval and initial orientation
 > 4. Always read the original papers before drawing conclusions
 
-The system was built and tested using papers on **tumor microbiome** as a use case, but can be used for any scientific literature by providing your own PDF papers.
+The system was built and tested using papers on **tumor microbiome** as a use case, but can be used for any scientific literature by providing your own PDF papers. The open source papers used are referenced in references.md.
 
 ## How it works
 
@@ -19,29 +19,39 @@ The system was built and tested using papers on **tumor microbiome** as a use ca
 5. The LLM generates an answer grounded in the provided literature
 6. Every conversation is logged to a monitoring database and visualized in Grafana
 
+
 ## Project structure
 
 ```
 literature-assistant-llm/
-├── app.py                              ← Flask web application
-├── ragbase.py                          ← RAG pipeline classes
-├── ingest.py                           ← PDF loading, chunking, embedding functions
-├── evaluation.py                       ← Retrieval evaluation metrics
-├── templates/
-│   └── index.html                      ← Web interface
-├── grafana/                            ← Grafana provisioning
-├── papers_pdf/                         ← Put your PDF papers here
-├── data/                               ← Ground truth and evaluation results
-├── docker-compose.yml                  ← Docker services configuration
-├── Dockerfile                          ← Flask app container
-├── init.sql                            ← Database initialization
-├── 01_ingest.ipynb                     ← Ingestion pipeline
-├── 02_rag.ipynb                        ← RAG pipeline notebook
-├── 03_evaluation-ret.ipynb             ← Ground truth generation
-├── 04_evaluation-ret-exp.ipynb         ← Embedding model experiments
-├── 05_evaluation-search-strategies.ipynb ← Search strategy experiments
-└── 06_evaluation-rag.ipynb             ← RAG answer quality evaluation
+├── app/
+│   ├── app.py                              ← Flask web application
+│   ├── ragbase.py                          ← RAG pipeline classes
+│   └── templates/
+│       └── index.html                      ← Web interface
+├── pipelines/
+│   ├── ingest.py                           ← PDF loading, chunking, embedding functions
+│   └── evaluation.py                       ← Retrieval evaluation metrics
+├── notebooks/
+│   ├── 03_evaluation-ret.ipynb             ← Ground truth generation
+│   ├── 04_evaluation-ret-exp.ipynb         ← Embedding model experiments
+│   ├── 05_evaluation-ret-exp2.ipynb        ← Search strategy experiments
+│   └── 06_evaluation-rag.ipynb             ← RAG answer quality evaluation
+├── data/
+│   ├── raw/
+│   │   └── papers_pdf/                     ← Put your PDF papers here
+│   └── ground_truth.csv                    ← Generated ground truth questions
+├── grafana/                                ← Grafana provisioning
+├── 01_ingest.ipynb                         ← Ingestion pipeline (run when adding papers)
+├── 02_rag.ipynb                            ← RAG pipeline notebook
+├── docker-compose.yml                      ← Docker services configuration
+├── Dockerfile                              ← Flask app container
+├── init.sql                                ← Database initialization
+├── REFERENCES.md                           ← List of papers used
+└── README.md
 ```
+
+
 ## What was implemented (project criteria)
 
 | Criteria | Notes |
@@ -60,7 +70,6 @@ literature-assistant-llm/
 | **User query rewriting** | Query rewriting implemented and evaluated — found to hurt performance, not used in final pipeline |
 | **Deployment to cloud** | Not deployed |
 
-## Project components - tested configurations
 
 ## Project components - tested configurations
 
@@ -78,6 +87,7 @@ literature-assistant-llm/
 - [Git](https://git-scm.com/)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) — for running the ingestion notebook
 - OpenAI API key
+
 
 ## Setup
 
@@ -111,7 +121,7 @@ uv sync
 
 Then:
 - Name your PDF files as: `keyword1_keyword2-author-journal-year.pdf`
-- Place them in the `papers_pdf/` folder
+- Place them in the `data/raw/papers_pdf/` folder
 - Run `01_ingest.ipynb` to load, chunk, embed and store papers in the database
 
 ### 5. Open the app
@@ -145,8 +155,7 @@ hybrid search (`pritamdeka/S-PubMedBert-MS-MARCO`for embedding for vector search
 - Hit Rate@10: 0.692
 - MRR@10: 0.556
 
-
-**Best RAG (evaluated on 200 sample questions):**
+**Best RAG:**
 gpt-4o-mini, default prompt
 - Relevant: 94.0%
 - Partly relevant: 4.5%

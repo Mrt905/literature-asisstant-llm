@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["uv", "run", "python", "app.py"]
+CMD ["uv", "run", "python", "app/app.py"]
