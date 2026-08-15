@@ -15,32 +15,33 @@ The system was built and tested using papers on **tumor microbiome** as a use ca
 1. PDF papers are loaded, chunked and embedded using `pritamdeka/S-PubMedBert-MS-MARCO` — a biomedical embedding model trained on PubMed literature
 2. Embeddings are stored in PostgreSQL with pgvector extension
 3. At query time, hybrid search (vector + text) retrieves the top 20 most relevant chunks, which are then reranked by a cross-encoder
-4. The top 10 chunks are passed to the LLM as context
+4. The top 10 chunks are passed to the LLM (`gpt-4.0-mini`) as context
 5. The LLM generates an answer grounded in the provided literature
 6. Every conversation is logged to a monitoring database and visualized in Grafana
 
 ## Project structure
 
+```
 literature-assistant-llm/
-├── app.py ← Flask web application
-├── ragbase.py ← RAG pipeline classes
-├── ingest.py ← PDF loading, chunking, embedding functions
-├── evaluation.py ← Retrieval evaluation metrics
+├── app.py                              ← Flask web application
+├── ragbase.py                          ← RAG pipeline classes
+├── ingest.py                           ← PDF loading, chunking, embedding functions
+├── evaluation.py                       ← Retrieval evaluation metrics
 ├── templates/
-│ └── index.html ← Web interface
-├── grafana/ ← Grafana provisioning
-├── papers_pdf/ ← Put your PDF papers here
-├── data/ ← Ground truth and evaluation results
-├── docker-compose.yml ← Docker services configuration
-├── Dockerfile ← Flask app container
-├── init.sql ← Database initialization
-├── 01_ingest.ipynb ← Ingestion pipeline
-├── 02_rag.ipynb ← RAG pipeline notebook
-├── 03_evaluation-ret.ipynb ← Ground truth generation
-├── 04_evaluation-ret-exp.ipynb ← Embedding model experiments
+│   └── index.html                      ← Web interface
+├── grafana/                            ← Grafana provisioning
+├── papers_pdf/                         ← Put your PDF papers here
+├── data/                               ← Ground truth and evaluation results
+├── docker-compose.yml                  ← Docker services configuration
+├── Dockerfile                          ← Flask app container
+├── init.sql                            ← Database initialization
+├── 01_ingest.ipynb                     ← Ingestion pipeline
+├── 02_rag.ipynb                        ← RAG pipeline notebook
+├── 03_evaluation-ret.ipynb             ← Ground truth generation
+├── 04_evaluation-ret-exp.ipynb         ← Embedding model experiments
 ├── 05_evaluation-search-strategies.ipynb ← Search strategy experiments
-└── 06_evaluation-rag.ipynb ← RAG answer quality evaluation
-
+└── 06_evaluation-rag.ipynb             ← RAG answer quality evaluation
+```
 ## What was implemented (project criteria)
 
 | Criteria | Notes |
@@ -61,22 +62,13 @@ literature-assistant-llm/
 
 ## Project components - tested configurations
 
+## Project components - tested configurations
+
 | Component | What was used | What was tested |
 |-----------|--------------|----------------|
-| **Knowledge base** | 12 open-access tumor microbiome papers (PDF), chunked into 1000-char chunks with 200 overlap, stored in PostgreSQL with pgvector | `paraphrase-MiniLM-L6-v2` |
-| | | `all-mpnet-base-v2` |
-| | | `all-MiniLM-L6-v2` |
-| | | `allenai-specter` |
-| | | `pritamdeka/S-PubMedBert-MS-MARCO` ✅ |
-| **Retrieval pipeline** | Hybrid search (vector + BM25) with cross-encoder reranker `cross-encoder/ms-marco-MiniLM-L-6-v2`, `pritamdeka/S-PubMedBert-MS-MARCO` embeddings, tested on the ground truth (5 question per chunk), Hit Rate and MRR for retrieval used for assessment, GPT-4o-mini for answer generation | Vector search, num_results=5 |
-| | | Vector search, num_results=10 |
-| | | Hybrid search, num_results=10 |
-| | | Hybrid + query rewriting, num_results=10 |
-| | | Hybrid + reranking, num_results=10 ✅ |
-| **RAG Evaluation** | A sample of 200 questions from the ground truth generated with LLM (5 questions per chunk), LLM-as-a-judge for answer quality | `gpt-4o-mini`, default prompt ✅ |
-| | | `gpt-4o-mini`, concise prompt |
-| | | `gpt-5.6-terra`, default prompt |
-| | | `gpt-5.6-terra`, concise prompt |
+| **Knowledge base** | 12 open-access tumor microbiome papers (PDF), chunked into 1000-char chunks with 200 overlap, stored in PostgreSQL with pgvector | `paraphrase-MiniLM-L6-v2`<br>`all-mpnet-base-v2`<br>`all-MiniLM-L6-v2`<br>`allenai-specter`<br>`pritamdeka/S-PubMedBert-MS-MARCO` ✅ |
+| **Retrieval pipeline** | Hybrid search (vector + BM25) with cross-encoder reranker `cross-encoder/ms-marco-MiniLM-L-6-v2`, `pritamdeka/S-PubMedBert-MS-MARCO` embeddings, GPT-4o-mini for answer generation | Vector search, num_results=5<br>Vector search, num_results=10<br>Hybrid search, num_results=10<br>Hybrid + query rewriting, num_results=10<br>Hybrid + reranking, num_results=10 ✅ |
+| **RAG Evaluation** | Sample of 200 questions from ground truth generated with LLM (5 questions per chunk), LLM-as-a-judge for answer quality | `gpt-4o-mini`, default prompt ✅<br>`gpt-4o-mini`, concise prompt<br>`gpt-5.6-terra`, default prompt<br>`gpt-5.6-terra`, concise prompt |
 | **User interface** | Flask web app with chat interface, conversation history, 👍/👎 feedback buttons | — |
 | **Monitoring** | PostgreSQL monitoring database, Grafana dashboard tracking questions, response time, token usage and user feedback | — |
 
