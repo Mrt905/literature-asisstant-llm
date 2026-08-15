@@ -1,10 +1,8 @@
--- create monitoring database
+-- existing monitoring database setup
 CREATE DATABASE monitoring;
 
--- connect to monitoring database
 \c monitoring;
 
--- create conversations table
 CREATE TABLE conversations (
     id SERIAL PRIMARY KEY,
     question TEXT,
@@ -13,6 +11,13 @@ CREATE TABLE conversations (
     input_tokens INTEGER,
     output_tokens INTEGER,
     total_tokens INTEGER,
-    feedback INTEGER,  -- 1 = thumbs up, -1 = thumbs down, NULL = no feedback
+    feedback INTEGER,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+\c papers;
+
+-- add full text search index to chunks table
+CREATE INDEX IF NOT EXISTS chunks_fts_idx 
+ON chunks USING gin(to_tsvector('english', text));
+

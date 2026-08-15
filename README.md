@@ -1,14 +1,85 @@
 # Tumor Microbiome Literature Assistant
 
-A RAG (Retrieval-Augmented Generation) assistant that answers questions based on scientific literature about tumor microbiome. The system uses vector search to find relevant chunks from uploaded papers and generates accurate, source-grounded answers using an LLM.
+A RAG (Retrieval-Augmented Generation) system designed for **scientific literature research**. The system allows researchers to quickly retrieve relevant information from a curated collection of scientific papers using natural language questions.
+
+> **Important:** This tool is designed to assist researchers, not replace careful reading of the literature. The recommended workflow is:
+> 1. Collect and curate relevant papers on your topic
+> 2. Ingest them into the system
+> 3. Use the assistant for fast retrieval and initial orientation
+> 4. Always read the original papers before drawing conclusions
+
+The system was built and tested using papers on **tumor microbiome** as a use case, but can be used for any scientific literature by providing your own PDF papers.
 
 ## How it works
 
 1. PDF papers are loaded, chunked and embedded using `pritamdeka/S-PubMedBert-MS-MARCO` — a biomedical embedding model trained on PubMed literature
 2. Embeddings are stored in PostgreSQL with pgvector extension
-3. At query time, the most similar chunks are retrieved and passed to the LLM as context
-4. The LLM generates an answer grounded in the provided literature
-5. Every conversation is logged to a monitoring database and visualized in Grafana
+3. At query time, hybrid search (vector + text) retrieves the top 20 most relevant chunks, which are then reranked by a cross-encoder
+4. The top 10 chunks are passed to the LLM as context
+5. The LLM generates an answer grounded in the provided literature
+6. Every conversation is logged to a monitoring database and visualized in Grafana
+
+## Project structure
+
+literature-assistant-llm/
+├── app.py ← Flask web application
+├── ragbase.py ← RAG pipeline classes
+├── ingest.py ← PDF loading, chunking, embedding functions
+├── evaluation.py ← Retrieval evaluation metrics
+├── templates/
+│ └── index.html ← Web interface
+├── grafana/ ← Grafana provisioning
+├── papers_pdf/ ← Put your PDF papers here
+├── data/ ← Ground truth and evaluation results
+├── docker-compose.yml ← Docker services configuration
+├── Dockerfile ← Flask app container
+├── init.sql ← Database initialization
+├── 01_ingest.ipynb ← Ingestion pipeline
+├── 02_rag.ipynb ← RAG pipeline notebook
+├── 03_evaluation-ret.ipynb ← Ground truth generation
+├── 04_evaluation-ret-exp.ipynb ← Embedding model experiments
+├── 05_evaluation-search-strategies.ipynb ← Search strategy experiments
+└── 06_evaluation-rag.ipynb ← RAG answer quality evaluation
+
+## What was implemented (project criteria)
+
+| Criteria | Notes |
+|----------|-------|
+| **Problem description** | RAG assistant for scientific literature research |
+| **Retrieval flow** | Knowledge base (PostgreSQL + pgvector) and LLM (GPT) used in the flow |
+| **Retrieval evaluation** | 4 embedding models and 5 search strategies evaluated, best one selected |
+| **LLM evaluation** | 2 LLM models and 2 prompt templates evaluated, best one selected |
+| **Interface** | Flask web application with chat interface |
+| **Ingestion pipeline** | Semi-automated ingestion via `01_ingest.ipynb` |
+| **Monitoring** | User feedback (👍/👎) collected + Grafana dashboard with 5+ charts |
+| **Containerization** | Everything in Docker Compose (app, PostgreSQL, Grafana) |
+| **Reproducibility** | Clear instructions in README, papers included, dependencies specified in `pyproject.toml` |
+| **Hybrid search** | Hybrid search (vector + BM25) implemented and evaluated |
+| **Document re-ranking** | Cross-encoder reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`) implemented and evaluated |
+| **User query rewriting** | Query rewriting implemented and evaluated — found to hurt performance, not used in final pipeline |
+| **Deployment to cloud** | Not deployed |
+
+## Project components - tested configurations
+
+| Component | What was used | What was tested |
+|-----------|--------------|----------------|
+| **Knowledge base** | 12 open-access tumor microbiome papers (PDF), chunked into 1000-char chunks with 200 overlap, stored in PostgreSQL with pgvector | `paraphrase-MiniLM-L6-v2` |
+| | | `all-mpnet-base-v2` |
+| | | `all-MiniLM-L6-v2` |
+| | | `allenai-specter` |
+| | | `pritamdeka/S-PubMedBert-MS-MARCO` ✅ |
+| **Retrieval pipeline** | Hybrid search (vector + BM25) with cross-encoder reranker `cross-encoder/ms-marco-MiniLM-L-6-v2`, `pritamdeka/S-PubMedBert-MS-MARCO` embeddings, tested on the ground truth (5 question per chunk), Hit Rate and MRR for retrieval used for assessment, GPT-4o-mini for answer generation | Vector search, num_results=5 |
+| | | Vector search, num_results=10 |
+| | | Hybrid search, num_results=10 |
+| | | Hybrid + query rewriting, num_results=10 |
+| | | Hybrid + reranking, num_results=10 ✅ |
+| **RAG Evaluation** | A sample of 200 questions from the ground truth generated with LLM (5 questions per chunk), LLM-as-a-judge for answer quality | `gpt-4o-mini`, default prompt ✅ |
+| | | `gpt-4o-mini`, concise prompt |
+| | | `gpt-5.6-terra`, default prompt |
+| | | `gpt-5.6-terra`, concise prompt |
+| **User interface** | Flask web app with chat interface, conversation history, 👍/👎 feedback buttons | — |
+| **Monitoring** | PostgreSQL monitoring database, Grafana dashboard tracking questions, response time, token usage and user feedback | — |
+
 
 ## Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
@@ -77,13 +148,17 @@ Grafana dashboard at `http://localhost:3000` shows:
 
 > Results are specific to the 12 papers used in this project on tumor microbiome. Results will vary depending on the number, topic, and quality of papers provided.
 
-**Best embedding model:** `pritamdeka/S-PubMedBert-MS-MARCO`
-- Hit Rate@10: 0.604
-- MRR@10: 0.380
+**Best retrieval model:** 
+hybrid search (`pritamdeka/S-PubMedBert-MS-MARCO`for embedding for vector search) + reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`)
+- Hit Rate@10: 0.692
+- MRR@10: 0.556
 
-**RAG answer quality (evaluated on 200 sample questions):**
-- Relevant: 82.6%
-- Partly relevant: 17.0%
-- Non-relevant: 0.5%
+
+**Best RAG (evaluated on 200 sample questions):**
+gpt-4o-mini, default prompt
+- Relevant: 94.0%
+- Partly relevant: 4.5%
+- Non-relevant: 1.5%
+- Average cost per question: 0.0005$
 
 The relatively low retrieval scores are due to all papers being on the same topic (tumor microbiome), making chunks semantically similar and harder to distinguish. 
