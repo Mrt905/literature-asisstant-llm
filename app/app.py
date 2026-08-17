@@ -1,10 +1,12 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+from ragbase import RAGBaseHistory
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
-from ragbase import RAGBaseHistory
 import psycopg
-import os
 import time
 
 load_dotenv()
@@ -111,4 +113,5 @@ def feedback():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
