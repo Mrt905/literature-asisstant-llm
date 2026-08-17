@@ -1,5 +1,7 @@
 # Tumor Microbiome Literature Assistant
 
+`https://your-app.up.railway.app`
+
 A RAG (Retrieval-Augmented Generation) system designed for **scientific literature research**. The system allows researchers to quickly retrieve relevant information from a curated collection of scientific papers using natural language questions.
 
 > **Important:** This tool is designed to assist researchers, not replace careful reading of the literature. The recommended workflow is:
@@ -33,20 +35,20 @@ literature-assistant-llm/
 │   ├── ingest.py                           ← PDF loading, chunking, embedding functions
 │   └── evaluation.py                       ← Retrieval evaluation metrics
 ├── notebooks/
-│   ├── 03_evaluation-ret.ipynb             ← Ground truth generation
+│   ├── 03_ground_truth_generation.ipynb    ← Ground truth generation
 │   ├── 04_evaluation-ret-exp.ipynb         ← Embedding model experiments
 │   ├── 05_evaluation-ret-exp2.ipynb        ← Search strategy experiments
 │   └── 06_evaluation-rag.ipynb             ← RAG answer quality evaluation
 ├── data/
-│   ├── raw/
-│   │   └── papers_pdf/                     ← Put your PDF papers here
-│   └── ground_truth.csv                    ← Generated ground truth questions
+│   └── raw/
+│       └── papers_pdf/                     ← Put your PDF papers here
 ├── grafana/                                ← Grafana provisioning
 ├── 01_ingest.ipynb                         ← Ingestion pipeline (run when adding papers)
 ├── 02_rag.ipynb                            ← RAG pipeline notebook
 ├── docker-compose.yml                      ← Docker services configuration
 ├── Dockerfile                              ← Flask app container
 ├── init.sql                                ← Database initialization
+├── railway.json                            ← Railway deployment configuration
 ├── REFERENCES.md                           ← List of papers used
 └── README.md
 ```
@@ -80,6 +82,19 @@ literature-assistant-llm/
 | **RAG Evaluation** | Sample of 200 questions from ground truth generated with LLM (5 questions per chunk), LLM-as-a-judge for answer quality | `gpt-4o-mini`, default prompt ✅<br>`gpt-4o-mini`, concise prompt<br>`gpt-5.6-terra`, default prompt<br>`gpt-5.6-terra`, concise prompt |
 | **User interface** | Flask web app with chat interface, conversation history, 👍/👎 feedback buttons | — |
 | **Monitoring** | PostgreSQL monitoring database, Grafana dashboard tracking questions, response time, token usage and user feedback | — |
+
+## Deployment
+
+The app is deployed on Railway at: `https://your-app.up.railway.app`
+
+To deploy your own instance:
+1. Fork this repository
+2. Create a [Railway](https://railway.app) account
+3. Create a new project from your GitHub repo
+4. Add `OPENAI_API_KEY` as an environment variable
+5. Railway will automatically deploy using the `Dockerfile`
+6. Add a PostgreSQL service with pgvector plugin
+7. Run `01_ingest.ipynb` pointing to your Railway Postgres URL to populate the database
 
 
 ## Prerequisites
