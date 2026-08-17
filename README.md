@@ -206,3 +206,7 @@ gpt-4o-mini llm model, default prompt (defined in ragbase.py) - best performing 
 - Average cost per question: 0.0005$
 
 The relatively low retrieval scores are due to all papers being on the same topic (tumor microbiome), making chunks semantically similar and harder to distinguish. 
+
+## Acknowledgments
+
+This project was built as part of the [LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp) course by [DataTalks.Club](https://datatalks.club/).
