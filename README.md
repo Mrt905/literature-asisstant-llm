@@ -1,6 +1,8 @@
 # Tumor Microbiome Literature Assistant
 
-`https://your-app.up.railway.app`
+Try asking questions about tumor microbiome here:
+
+[!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
 
 A RAG (Retrieval-Augmented Generation) system designed for **scientific literature research**. The system allows researchers to quickly retrieve relevant information from a curated collection of scientific papers using natural language questions.
 
@@ -17,7 +19,7 @@ The system was built and tested using papers on **tumor microbiome** as a use ca
 1. PDF papers are loaded, chunked and embedded using `pritamdeka/S-PubMedBert-MS-MARCO` — a biomedical embedding model trained on PubMed literature
 2. Embeddings are stored in PostgreSQL with pgvector extension
 3. At query time, hybrid search (vector + text) retrieves the top 20 most relevant chunks, which are then reranked by a cross-encoder
-4. The top 10 chunks are passed to the LLM (`gpt-4.0-mini`) as context
+4. The top 10 chunks are passed to the LLM (`gpt-4o-mini`) as context
 5. The LLM generates an answer grounded in the provided literature
 6. Every conversation is logged to a monitoring database and visualized in Grafana
 
@@ -70,7 +72,7 @@ literature-assistant-llm/
 | **Hybrid search** | Hybrid search (vector + BM25) implemented and evaluated |
 | **Document re-ranking** | Cross-encoder reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`) implemented and evaluated |
 | **User query rewriting** | Query rewriting implemented and evaluated — found to hurt performance, not used in final pipeline |
-| **Deployment to cloud** | Not deployed |
+| **Deployment to cloud** | Deployed on Railway [!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/) |
 
 
 ## Project components - tested configurations
@@ -83,33 +85,18 @@ literature-assistant-llm/
 | **User interface** | Flask web app with chat interface, conversation history, 👍/👎 feedback buttons | — |
 | **Monitoring** | PostgreSQL monitoring database, Grafana dashboard tracking questions, response time, token usage and user feedback | — |
 
-## Deployment
-
-The app is deployed on Railway at: `https://your-app.up.railway.app`
-
-To deploy your own instance:
-1. Fork this repository
-2. Create a [Railway](https://railway.app) account
-3. Create a new project from your GitHub repo
-4. Add `OPENAI_API_KEY` as an environment variable
-5. Railway will automatically deploy using the `Dockerfile`
-6. Add a PostgreSQL service with pgvector plugin
-7. Run `01_ingest.ipynb` pointing to your Railway Postgres URL to populate the database
-
-
 ## Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Git](https://git-scm.com/)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) — for running the ingestion notebook
 - OpenAI API key
 
-
-## Setup
+## Local Setup
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Mrt905/literature-assistant-llm.git
-cd literature-assistant-llm
+git clone git clone https://github.com/Mrt905/literature-rag.git
+cd literature-rag
 ```
 
 ### 2. Set up environment variables
@@ -169,6 +156,38 @@ Grafana dashboard at `http://localhost:3000` shows:
 - Questions and response time over time
 - Recent conversations
 - User feedback 
+
+## Deployment
+
+The app is deployed on Railway at: [!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
+
+To deploy your own instance:
+1. Fork this repository
+2. Create a [Railway](https://railway.app) account
+3. Create a new project from your GitHub repo — Railway will automatically detect the `Dockerfile`
+4. Add a **PostgreSQL** service to your project
+5. In the PostgreSQL service → Data tab, run:
+```sql
+   CREATE EXTENSION IF NOT EXISTS vector;
+   CREATE TABLE IF NOT EXISTS conversations (
+       id SERIAL PRIMARY KEY,
+       question TEXT,
+       answer TEXT,
+       response_time FLOAT,
+       input_tokens INTEGER,
+       output_tokens INTEGER,
+       total_tokens INTEGER,
+       feedback INTEGER,
+       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+```
+6. Add these environment variables to your app service:
+   - `OPENAI_API_KEY` — your OpenAI API key
+   - `DATABASE_URL` — reference your Postgres service: `${{Postgres.DATABASE_URL}}`
+   - `MONITORING_URL` — same: `${{Postgres.DATABASE_URL}}`
+7. Enable **Public Networking** on the PostgreSQL service to get a public connection URL
+8. Run `01_ingest.ipynb` using the public Postgres URL to populate the database with your papers
+9. Generate a public domain for your app service in Settings → Networking
 
 ## Evaluation
 

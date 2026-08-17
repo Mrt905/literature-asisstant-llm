@@ -30,7 +30,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./papers_pdf:/app/papers_pdf
+      - ./data/raw/papers_pdf:/app/papers_pdf
 
   grafana:
     image: grafana/grafana:latest
