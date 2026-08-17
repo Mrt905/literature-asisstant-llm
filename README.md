@@ -2,7 +2,7 @@
 
 Try asking questions about tumor microbiome here:
 
-[!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
+[Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
 
 A RAG (Retrieval-Augmented Generation) system designed for **scientific literature research**. The system allows researchers to quickly retrieve relevant information from a curated collection of scientific papers using natural language questions.
 
@@ -72,7 +72,7 @@ literature-assistant-llm/
 | **Hybrid search** | Hybrid search (vector + BM25) implemented and evaluated |
 | **Document re-ranking** | Cross-encoder reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`) implemented and evaluated |
 | **User query rewriting** | Query rewriting implemented and evaluated — found to hurt performance, not used in final pipeline |
-| **Deployment to cloud** | Deployed on Railway [!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/) |
+| **Deployment to cloud** | Deployed on Railway [Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/) |
 
 
 ## Project components - tested configurations
@@ -159,7 +159,7 @@ Grafana dashboard at `http://localhost:3000` shows:
 
 ## Deployment
 
-The app is deployed on Railway at: [!Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
+The app is deployed on Railway at: [Tumor Microbiome Assistant](https://literature-rag-production.up.railway.app/)
 
 To deploy your own instance:
 1. Fork this repository
