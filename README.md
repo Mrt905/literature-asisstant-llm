@@ -75,7 +75,7 @@ literature-assistant-llm/
 
 | Component | What was used | What was tested |
 |-----------|--------------|----------------|
-| **Knowledge base** | 12 open-access tumor microbiome papers (PDF), chunked into 1000-char chunks with 200 overlap, stored in PostgreSQL with pgvector | `paraphrase-MiniLM-L6-v2`<br>`all-mpnet-base-v2`<br>`all-MiniLM-L6-v2`<br>`allenai-specter`<br>`pritamdeka/S-PubMedBert-MS-MARCO` ✅ |
+| **Knowledge base** | 12 open-access tumor microbiome papers (PDF), chunked into 1000-character chunks with 200 overlap, stored in PostgreSQL with pgvector | `paraphrase-MiniLM-L6-v2`<br>`all-mpnet-base-v2`<br>`all-MiniLM-L6-v2`<br>`allenai-specter`<br>`pritamdeka/S-PubMedBert-MS-MARCO` ✅ |
 | **Retrieval pipeline** | Hybrid search (vector + BM25) with cross-encoder reranker `cross-encoder/ms-marco-MiniLM-L-6-v2`, `pritamdeka/S-PubMedBert-MS-MARCO` embeddings, GPT-4o-mini for answer generation | Vector search, num_results=5<br>Vector search, num_results=10<br>Hybrid search, num_results=10<br>Hybrid + query rewriting, num_results=10<br>Hybrid + reranking, num_results=10 ✅ |
 | **RAG Evaluation** | Sample of 200 questions from ground truth generated with LLM (5 questions per chunk), LLM-as-a-judge for answer quality | `gpt-4o-mini`, default prompt ✅<br>`gpt-4o-mini`, concise prompt<br>`gpt-5.6-terra`, default prompt<br>`gpt-5.6-terra`, concise prompt |
 | **User interface** | Flask web app with chat interface, conversation history, 👍/👎 feedback buttons | — |
@@ -114,15 +114,24 @@ This starts:
 - **Grafana** — monitoring dashboard at `http://localhost:3000` (login: admin/admin)
 
 ### 4. Ingest papers
-Install dependencies for the ingestion notebook:
-```bash
-uv sync
-```
 
-Then:
 - Name your PDF files as: `keyword1_keyword2-author-journal-year.pdf`
 - Place them in the `data/raw/papers_pdf/` folder
-- Run `01_ingest.ipynb` to load, chunk, embed and store papers in the database
+- Run the ingestion notebook:
+
+```bash
+uv run jupyter nbconvert --to notebook --execute 01_ingest.ipynb
+```
+
+This will:
+- Extract text from PDFs
+- Chunk documents into 1000-character pieces
+- Generate embeddings using `pritamdeka/S-PubMedBert-MS-MARCO`
+- Store chunks and embeddings in PostgreSQL
+
+The text search index for hybrid search is created automatically when Docker starts via `init.sql`.
+
+> **Note:** Only run this once
 
 ### 5. Open the app
 Go to `http://localhost:5000` in your browser.
@@ -151,12 +160,12 @@ Grafana dashboard at `http://localhost:3000` shows:
 > Results are specific to the 12 papers used in this project on tumor microbiome. Results will vary depending on the number, topic, and quality of papers provided.
 
 **Best retrieval model:** 
-hybrid search (`pritamdeka/S-PubMedBert-MS-MARCO`for embedding for vector search) + reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`)
+hybrid search (`pritamdeka/S-PubMedBert-MS-MARCO`for embedding for vector search, best embedding model as determined in evaluation/04_evaluation-ret-exp.ipynb) + reranking (`cross-encoder/ms-marco-MiniLM-L-6-v2`) - the best performing retrieval model as determined in 05_evaluation-ret-exp2.ipynb
 - Hit Rate@10: 0.692
 - MRR@10: 0.556
 
 **Best RAG:**
-gpt-4o-mini, default prompt
+gpt-4o-mini llm model, default prompt (defined in ragbase.py) - best performing RAG system as determined in 06_evaluation-rag.ipynb
 - Relevant: 94.0%
 - Partly relevant: 4.5%
 - Non-relevant: 1.5%
